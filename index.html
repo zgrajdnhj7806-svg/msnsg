@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GMod Web Playground - 游戏运行控制</title>
+    <title>GMod Web Playground - 可折叠UI</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gltf-loader@1.0.0/dist/gltf-loader.min.js"></script>
@@ -29,59 +29,69 @@
         /* 游戏状态指示器 */
         #gameStatus {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 10px;
+            left: 10px;
             background: rgba(0, 0, 0, 0.7);
-            padding: 8px 15px;
-            border-radius: 20px;
+            padding: 5px 10px;
+            border-radius: 15px;
             border: 1px solid #00a8ff;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
             z-index: 100;
-            font-size: 14px;
+            font-size: 12px;
             backdrop-filter: blur(5px);
+            transition: all 0.3s;
+        }
+        
+        #gameStatus.collapsed {
+            transform: translateX(-80px);
         }
         
         .status-indicator {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: #ff416c;
         }
         
         .status-indicator.running {
             background: #00ff9d;
-            box-shadow: 0 0 10px #00ff9d;
+            box-shadow: 0 0 5px #00ff9d;
         }
         
         .status-indicator.paused {
             background: #ffcc00;
-            box-shadow: 0 0 10px #ffcc00;
+            box-shadow: 0 0 5px #ffcc00;
         }
         
         /* 游戏运行控制面板 */
         #gameControlPanel {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
+            bottom: 10px;
+            right: 10px;
             background: rgba(0, 0, 0, 0.85);
-            border-radius: 10px;
-            padding: 15px;
-            width: 300px;
+            border-radius: 8px;
+            padding: 10px;
+            width: 280px;
             z-index: 100;
             backdrop-filter: blur(5px);
             border: 1px solid #00a8ff;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        #gameControlPanel.collapsed {
+            transform: translateY(calc(100% - 40px));
         }
         
         .control-btn {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: rgba(50, 50, 70, 0.8);
             border: 2px solid rgba(255, 255, 255, 0.5);
@@ -90,7 +100,7 @@
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 12px;
+            font-size: 10px;
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -99,12 +109,12 @@
         }
         
         .control-btn i {
-            font-size: 20px;
-            margin-bottom: 5px;
+            font-size: 16px;
+            margin-bottom: 3px;
         }
         
         .control-btn:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
             border-color: #00a8ff;
             background: rgba(0, 168, 255, 0.2);
         }
@@ -137,51 +147,51 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1; /* 确保画布在底层 */
+            z-index: 1;
         }
         
         /* 移动控制面板 */
         .mobile-controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 10px;
             left: 0;
             width: 100%;
             display: none;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 10px;
             pointer-events: none;
             z-index: 50;
         }
         
         .joystick-container {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             position: relative;
             pointer-events: auto;
         }
         
         .joystick {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             position: absolute;
-            top: 30px;
-            left: 30px;
+            top: 25px;
+            left: 25px;
             border: 2px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
         }
         
         .action-buttons {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
             pointer-events: auto;
         }
         
         .action-btn {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: rgba(255, 100, 100, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.5);
@@ -189,1004 +199,53 @@
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 24px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            font-size: 20px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
         }
         
         /* HUD界面 */
         #hud {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
+            bottom: 10px;
+            left: 10px;
             background: rgba(0, 0, 0, 0.7);
-            padding: 15px;
-            border-radius: 10px;
+            padding: 10px;
+            border-radius: 8px;
             border: 1px solid #00a8ff;
             backdrop-filter: blur(5px);
-            max-width: 300px;
+            max-width: 280px;
             display: none;
-            z-index: 60; /* 确保HUD在画布上方 */
+            z-index: 60;
+            transition: all 0.3s;
+        }
+        
+        #hud.collapsed {
+            transform: translateX(-calc(100% - 40px));
         }
         
         .hud-section {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         
         .hud-title {
             color: #00ff9d;
-            margin-bottom: 8px;
-            font-size: 18px;
+            margin-bottom: 5px;
+            font-size: 14px;
             border-bottom: 1px solid #00a8ff;
-            padding-bottom: 5px;
+            padding-bottom: 3px;
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        
+        .hud-title i {
+            font-size: 10px;
         }
         
         .hud-content {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 5px;
         }
         
-        .hud-item {
-            background: rgba(30, 30, 50, 0.7);
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .hud-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-        
-        /* Lua控制台 */
-        #luaConsole {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 320px;
-            height: 200px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
-            border: 1px solid #ff416c;
-            display: none;
-            flex-direction: column;
-            backdrop-filter: blur(5px);
-            z-index: 70; /* 确保控制台在画布上方 */
-        }
-        
-        .console-header {
-            background: rgba(255, 65, 108, 0.2);
-            padding: 8px 15px;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #ff416c;
-        }
-        
-        .console-title {
-            color: #ff416c;
-            font-weight: bold;
-        }
-        
-        .console-body {
-            flex: 1;
-            padding: 10px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 14px;
-        }
-        
-        .console-input {
-            display: flex;
-            padding: 10px;
-            border-top: 1px solid #333;
-            background: rgba(30, 30, 30, 0.8);
-        }
-        
-        .console-input input {
-            flex: 1;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid #555;
-            border-radius: 4px;
-            color: white;
-        }
-        
-        .console-input button {
-            margin-left: 10px;
-            padding: 8px 15px;
-            background: #ff416c;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            cursor: pointer;
-        }
-        
-        .log-entry {
-            margin-bottom: 5px;
-            padding: 3px 5px;
-            border-radius: 3px;
-        }
-        
-        .log-entry.info {
-            color: #00a8ff;
-        }
-        
-        .log-entry.success {
-            color: #00ff9d;
-        }
-        
-        .log-entry.warning {
-            color: #ffcc00;
-        }
-        
-        .log-entry.error {
-            color: #ff416c;
-        }
-        
-        /* 开始屏幕 */
-        #startScreen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-        
-        .welcome-title {
-            font-size: 48px;
-            margin-bottom: 20px;
-            background: linear-gradient(45deg, #00a8ff, #00ff9d);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(0, 168, 255, 0.5);
-        }
-        
-        .welcome-subtitle {
-            font-size: 22px;
-            margin-bottom: 40px;
-            max-width: 800px;
-            text-align: center;
-            line-height: 1.6;
-            color: #ccc;
-        }
-        
-        .features {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .feature-card {
-            background: rgba(30, 30, 50, 0.7);
-            border-radius: 10px;
-            padding: 20px;
-            width: 220px;
-            text-align: center;
-            border: 1px solid #00a8ff;
-            transition: all 0.3s;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-            border-color: #00ff9d;
-        }
-        
-        .feature-icon {
-            font-size: 40px;
-            margin-bottom: 15px;
-            color: #00ff9d;
-        }
-        
-        .feature-title {
-            font-size: 20px;
-            margin-bottom: 10px;
-            color: #00a8ff;
-        }
-        
-        .feature-desc {
-            font-size: 14px;
-            color: #aaa;
-        }
-        
-        #startGameButton {
-            padding: 15px 60px;
-            font-size: 24px;
-            background: linear-gradient(45deg, #00a8ff, #00ff9d);
-            border: none;
-            border-radius: 50px;
-            color: #000;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 0 20px rgba(0, 168, 255, 0.5);
-        }
-        
-        #startGameButton:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(0, 168, 255, 0.8);
-        }
-        
-        .instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-size: 14px;
-            color: #aaa;
-            border: 1px solid #00a8ff;
-        }
-        
-        /* 角色模型预览 */
-        .character-preview {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 20px;
-            z-index: 50;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
-            border-radius: 30px;
-            border: 1px solid #00a8ff;
-        }
-        
-        .character-model {
-            width: 40px;
-            height: 60px;
-            background: rgba(50, 50, 70, 0.8);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-        
-        .character-model:hover {
-            transform: translateY(-5px);
-            border-color: #00ff9d;
-        }
-        
-        .character-model.selected {
-            border-color: #ff416c;
-            background: rgba(255, 65, 108, 0.1);
-        }
-        
-        .character-icon {
-            font-size: 20px;
-            margin-bottom: 5px;
-            color: #00ff9d;
-        }
-        
-        .character-name {
-            font-size: 10px;
-            text-align: center;
-        }
-        
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .toolbar {
-                padding: 8px 10px;
-            }
-            
-            .logo-text {
-                font-size: 16px;
-            }
-            
-            .tool-btn {
-                padding: 6px 10px;
-                font-size: 12px;
-            }
-            
-            .mode-btn {
-                padding: 4px 8px;
-                font-size: 12px;
-            }
-            
-            .welcome-title {
-                font-size: 32px;
-            }
-            
-            .welcome-subtitle {
-                font-size: 18px;
-                padding: 0 20px;
-            }
-            
-            .feature-card {
-                width: 100%;
-                max-width: 300px;
-            }
-            
-            #luaConsole {
-                width: 95%;
-                left: 2.5%;
-                right: 2.5%;
-            }
-            
-            #gameControlPanel {
-                width: 90%;
-                left: 5%;
-                right: 5%;
-                bottom: 100px;
-            }
-            
-            .character-preview {
-                bottom: 180px;
-                flex-wrap: wrap;
-                justify-content: center;
-                max-width: 90%;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- 游戏状态指示器 -->
-    <div id="gameStatus">
-        <div class="status-indicator"></div>
-        <span>游戏状态: 已停止</span>
-    </div>
-    
-    <!-- 游戏运行控制面板 -->
-    <div id="gameControlPanel">
-        <div class="control-btn" id="startButton">
-            <i class="fas fa-play"></i> 开始
-        </div>
-        <div class="control-btn" id="pauseButton">
-            <i class="fas fa-pause"></i> 暂停
-        </div>
-        <div class="control-btn" id="restartButton">
-            <i class="fas fa-redo"></i> 重启
-        </div>
-        <div class="control-btn" id="exitButton">
-            <i class="fas fa-times"></i> 退出
-        </div>
-    </div>
-    
-    <!-- AI控制面板 -->
-    <div id="aiControlPanel">
-        <div class="ai-panel-header">
-            <div class="ai-panel-title">AI 控制系统</div>
-            <div class="ai-toggle" id="aiMasterToggle">
-                <div class="toggle-switch active">
-                    <div class="toggle-knob"></div>
-                </div>
-                <span>AI 开启</span>
-            </div>
-        </div>
-        
-        <div class="ai-controls">
-            <div class="ai-control-btn" id="spawnEnemy">
-                <i class="fas fa-skull"></i> 生成敌人
-            </div>
-            <div class="ai-control-btn" id="spawnAlly">
-                <i class="fas fa-user-friends"></i> 生成友军
-            </div>
-            <div class="ai-control-btn" id="clearAI">
-                <i class="fas fa-trash"></i> 清除所有AI
-            </div>
-            <div class="ai-control-btn" id="toggleWeapons">
-                <i class="fas fa-gun"></i> 切换武器
-            </div>
-        </div>
-    </div>
-    
-    <!-- 武器选择面板 -->
-    <div id="weaponPanel">
-        <div class="weapon-panel-header">
-            <div class="weapon-panel-title">武器选择</div>
-            <button class="close-weapon"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="weapon-list" id="weaponList">
-            <!-- 武器将通过JS动态生成 -->
-        </div>
-    </div>
-    
-    <!-- 角色模型预览 -->
-    <div class="character-preview">
-        <div class="character-model selected" data-model="soldier">
-            <div class="character-icon"><i class="fas fa-user-ninja"></i></div>
-            <div class="character-name">士兵</div>
-        </div>
-        <div class="character-model" data-model="scientist">
-            <div class="character-icon"><i class="fas fa-flask"></i></div>
-            <div class="character-name">科学家</div>
-        </div>
-        <div class="character-model" data-model="robot">
-            <div class="character-icon"><i class="fas fa-robot"></i></div>
-            <div class="character-name">机器人</div>
-        </div>
-        <div class="character-model" data-model="alien">
-            <div class="character-icon"><i class="fas fa-alien"></i></div>
-            <div class="character-name">外星人</div>
-        </div>
-    </div>
-    
-    <!-- 顶部工具栏 -->
-    <div class="toolbar">
-        <div class="logo">
-            <div class="logo-icon">G</div>
-            <div class="logo-text">GMod Web Playground</div>
-        </div>
-        
-        <div class="tools">
-            <button class="tool-btn active" data-tool="move">
-                <i class="fas fa-arrows-alt"></i> 移动
-            </button>
-            <button class="tool-btn" data-tool="spawn">
-                <i class="fas fa-plus-circle"></i> 生成
-            </button>
-            <button class="tool-btn" data-tool="physics">
-                <i class="fas fa-link"></i> 物理
-            </button>
-            <button class="tool-btn" data-tool="import">
-                <i class="fas fa-folder-open"></i> 导入模型
-            </button>
-            <button class="tool-btn" data-tool="ragdoll">
-                <i class="fas fa-user-injured"></i> 布娃娃
-            </button>
-            <button class="tool-btn" id="aiToggle">
-                <i class="fas fa-robot"></i> AI
-            </button>
-        </div>
-        
-        <div class="mode-selector">
-            <button class="mode-btn active" data-mode="prop">物体</button>
-            <button class="mode-btn" data-mode="npc">NPC</button>
-            <button class="mode-btn" data-mode="vehicle">载具</button>
-        </div>
-    </div>
-    
-    <!-- 主游戏区域 -->
-    <div id="gameContainer">
-        <canvas id="gameCanvas"></canvas>
-        
-        <!-- 移动控制面板 -->
-        <div class="mobile-controls">
-            <div class="joystick-container">
-                <div class="joystick"></div>
-            </div>
-            <div class="action-buttons">
-                <div class="action-btn">🔫</div>
-                <div class="action-btn">🧱</div>
-                <div class="action-btn">🔗</div>
-            </div>
-        </div>
-        
-        <!-- HUD界面 -->
-        <div id="hud">
-            <div class="hud-section">
-                <div class="hud-title">实体信息</div>
-                <div class="hud-content">
-                    <div class="hud-item">
-                        <div class="hud-icon" style="background: #ff5555;">P</div>
-                        <div>物体: <span id="propCount">0</span></div>
-                    </div>
-                    <div class="hud-item">
-                        <div class="hud-icon" style="background: #55ff55;">N</div>
-                        <div>NPC: <span id="npcCount">0</span></div>
-                    </div>
-                    <div class="hud-item">
-                        <div class="hud-icon" style="background: #5555ff;">L</div>
-                        <div>Lua脚本: <span id="luaCount">0</span></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="hud-section">
-                <div class="hud-title">AI状态</div>
-                <div class="hud-content">
-                    <div class="hud-item">
-                        <div class="hud-icon" style="background: #ff416c;">AI</div>
-                        <div>敌人: <span id="enemyCount">0</span></div>
-                    </div>
-                    <div class="hud-item">
-                        <div class="hud-icon" style="background: #00a8ff;">AI</div>
-                        <div>友军: <span id="allyCount">0</span></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Lua控制台 -->
-        <div id="luaConsole">
-            <div class="console-header">
-                <div class="console-title">Lua 控制台</div>
-                <div>状态: <span id="luaStatus">就绪</span></div>
-            </div>
-            <div class="console-body" id="consoleOutput">
-                <div class="log-entry info">> 欢迎来到 GMod Web Playground!</div>
-                <div class="log-entry info">> 输入 Lua 命令并点击执行按钮</div>
-                <div class="log-entry success">> 示例: SpawnNPC("models/player.mdl", "weapons/rifle.mdl", "enemy")</div>
-            </div>
-            <div class="console-input">
-                <input type="text" id="luaInput" placeholder="输入 Lua 命令...">
-                <button id="executeLuaBtn">执行</button>
-            </div>
-        </div>
-        
-        <!-- 开始屏幕 -->
-        <div id="startScreen">
-            <h1 class="welcome-title">GMod Web Playground</h1>
-            <p class="welcome-subtitle">基于浏览器的 Garry's Mod 模拟体验。创建物体、编写 Lua 脚本、体验物理沙盒！</p>
-            
-            <div class="features">
-                <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <div class="feature-title">AI系统</div>
-                    <div class="feature-desc">敌对AI与友军AI，多种角色模型</div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔫</div>
-                    <div class="feature-title">武器系统</div>
-                    <div class="feature-desc">多种武器模型，可自定义装备</div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📱</div>
-                    <div class="feature-title">手机端支持</div>
-                    <div class="feature-desc">专为移动设备优化的触控操作</div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🌐</div>
-                    <div class="feature-title">局域网联机</div>
-                    <div class="feature-desc">与朋友在同一局域网内畅玩</div>
-                </div>
-            </div>
-            
-            <button id="startGameButton">开始游戏</button>
-            <div class="instructions">按空格键跳跃 | 鼠标控制视角 | WASD移动 | V键起飞</div>
-        </div>
-    </div>
-
-    <script>
-        // 全局变量
-        let scene, camera, renderer, world;
-        let player, playerBody;
-        let props = [];
-        let npcs = [];
-        let ragdolls = [];
-        let constraints = [];
-        let clock = new THREE.Clock();
-        let currentTool = 'move';
-        let currentMode = 'prop';
-        let errorLog = [];
-        let aiEnabled = true;
-        let selectedCharacter = 'soldier';
-        let selectedWeapon = 'rifle';
-        let gameRunning = false;
-        let gamePaused = false;
-        
-        // 测试立方体引用
-        let testCube = null;
-        
-        // 武器数据
-        const weapons = {
-            pistol: { name: "手枪", icon: "🔫", damage: 10 },
-            rifle: { name: "步枪", icon: "🔫", damage: 20 },
-            shotgun: { name: "霰弹枪", icon: "💥", damage: 30 },
-            sniper: { name: "狙击枪", icon: "🎯", damage: 50 },
-            grenade: { name: "手榴弹", icon: "💣", damage: 40 }
-        };
-        
-        // 角色数据
-        const characters = {
-            soldier: { name: "士兵", icon: "🧍", color: "#3498db" },
-            scientist: { name: "科学家", icon: "🔬", color: "#9b59b6" },
-            robot: { name: "机器人", icon: "🤖", color: "#e74c3c" },
-            alien: { name: "外星人", icon: "👽", color: "#2ecc71" }
-        };
-        
-        // NPC类
-        class NPC {
-            constructor(model, weapon, team) {
-                this.model = model;
-                this.weapon = weapon;
-                this.team = team;
-                this.aiEnabled = true;
-                this.health = 100;
-                this.position = new THREE.Vector3(
-                    (Math.random() - 0.5) * 20,
-                    1,
-                    (Math.random() - 0.5) * 20
-                );
-                
-                this.createCharacter();
-                this.setupAI();
-            }
-            
-            createCharacter() {
-                // 创建角色视觉模型
-                const geometry = new THREE.CapsuleGeometry(0.5, 1.5, 4, 8);
-                const material = new THREE.MeshStandardMaterial({ 
-                    color: characters[this.model].color,
-                    roughness: 0.7
-                });
-                this.mesh = new THREE.Mesh(geometry, material);
-                this.mesh.position.copy(this.position);
-                this.mesh.castShadow = true;
-                scene.add(this.mesh);
-                
-                // 添加武器模型
-                this.weaponMesh = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.3, 0.1, 1),
-                    new THREE.MeshStandardMaterial({ color: 0x555555 })
-                );
-                this.weaponMesh.position.set(0.4, 0.5, 0);
-                this.mesh.add(this.weaponMesh);
-                
-                // 创建物理体
-                const body = new CANNON.Body({ mass: 5 });
-                body.addShape(new CANNON.Capsule(0.5, 1.5, 4));
-                body.position.copy(this.position);
-                world.addBody(body);
-                
-                this.body = body;
-            }
-            
-            setupAI() {
-                this.aiState = 'patrol';
-                this.patrolTarget = new THREE.Vector3(
-                    (Math.random() - 0.5) * 30,
-                    1,
-                    (Math.random() - 0.5) * 30
-                );
-                this.attackRange = this.team === 'enemy' ? 15 : 20;
-            }
-            
-            update() {
-                if (!this.aiEnabled || gamePaused) return;
-                
-                // 更新位置
-                this.mesh.position.copy(this.body.position);
-                
-                // AI行为
-                if (this.team === 'enemy') {
-                    // 敌对AI行为
-                    const playerDist = this.body.position.distanceTo(playerBody.position);
-                    
-                    if (playerDist < this.attackRange) {
-                        // 攻击玩家
-                        this.aiState = 'attack';
-                        this.body.velocity.x = (playerBody.position.x - this.body.position.x) * 0.1;
-                        this.body.velocity.z = (playerBody.position.z - this.body.position.z) * 0.1;
-                    } else {
-                        // 巡逻
-                        this.aiState = 'patrol';
-                        const dir = new THREE.Vector3().subVectors(this.patrolTarget, this.body.position);
-                        if (dir.length() < 2) {
-                            this.patrolTarget.set(
-                                (Math.random() - 0.5) * 30,
-                                1,
-                                (Math.random() - 0.5) * 30
-                            );
-                        } else {
-                            dir.normalize().multiplyScalar(0.05);
-                            this.body.velocity.x = dir.x;
-                            this.body.velocity.z = dir.z;
-                        }
-                    }
-                } else {
-                    // 友军AI行为
-                    const playerDist = this.body.position.distanceTo(playerBody.position);
-                    
-                    if (playerDist > 10) {
-                        // 跟随玩家
-                        this.aiState = 'follow';
-                        const dir = new THREE.Vector3().subVectors(playerBody.position, this.body.position);
-                        dir.normalize().multiplyScalar(0.03);
-                        this.body.velocity.x = dir.x;
-                        this.body.velocity.z = dir.z;
-                    } else {
-                        // 待命
-                        this.aiState = 'idle';
-                    }
-                }
-            }
-            
-            takeDamage(amount) {
-                this.health -= amount;
-                if (this.health <= 0) {
-                    this.destroy();
-                    return true;
-                }
-                return false;
-            }
-            
-            destroy() {
-                scene.remove(this.mesh);
-                world.removeBody(this.body);
-                npcs = npcs.filter(npc => npc !== this);
-                updateHUD();
-            }
-        }
-        
-        // 初始化
-        function init() {
-            // 创建场景
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x88ccff);
-            scene.fog = new THREE.Fog(0x88ccff, 0, 100);
-            
-            // 创建相机
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 1.6, 0);
-            
-            // 创建渲染器
-            renderer = new THREE.WebGLRenderer({ 
-                antialias: true,
-                powerPreference: "high-performance",
-                alpha: true // 确保背景透明
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 性能优化
-            document.getElementById('gameContainer').appendChild(renderer.domElement);
-            
-            // 创建物理世界
-            world = new CANNON.World();
-            world.gravity.set(0, -9.82, 0);
-            world.broadphase = new CANNON.NaiveBroadphase();
-            world.solver.iterations = 10;
-            world.defaultContactMaterial.friction = 0.1;
-            
-            // 添加光源
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 20, 10);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 1024;
-            directionalLight.shadow.mapSize.height = 1024;
-            scene.add(directionalLight);
-            
-            // 创建地面
-            createGround();
-            
-            // 创建玩家
-            createPlayer();
-            
-            // 创建测试立方体 - 确保有可见内容
-            const testGeometry = new THREE.BoxGeometry(2, 2, 2);
-            const testMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0xff0000,
-                roughness: 0.7
-            });
-            testCube = new THREE.Mesh(testGeometry, testMaterial);
-            testCube.position.set(0, 1, 0);
-            testCube.castShadow = true;
-            scene.add(testCube);
-            
-            // 创建一些初始物体
-            createProp(5, 1, 0, 0xff0000);
-            createProp(-5, 1, 0, 0x00ff00);
-            createProp(0, 1, 5, 0x0000ff);
-            
-            // 创建初始NPC
-            spawnNPC('soldier', 'rifle', 'enemy');
-            spawnNPC('scientist', 'pistol', 'ally');
-            
-            // 初始化武器面板
-            initWeaponPanel();
-            
-            // 初始化角色选择
-            initCharacterSelection();
-            
-            // 模拟局域网连接
-            simulateLANConnection();
-            
-            // 添加事件监听器
-            window.addEventListener('resize', onWindowResize);
-            document.addEventListener('keydown', onKeyDown);
-            document.addEventListener('keyup', onKeyUp);
-            
-            // 工具按钮事件
-            document.querySelectorAll('.tool-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentTool = btn.dataset.tool;
-                    updateHUD();
-                    
-                    // 显示AI控制面板
-                    if (btn.id === 'aiToggle') {
-                        document.getElementById('aiControlPanel').style.display = 'block';
-                    }
-                    
-                    // 切换聊天面板
-                    if (btn.id === 'chatToggle') {
-                        chatVisible = !chatVisible;
-                        document.getElementById('chatPanel').classList.toggle('active');
-                    }
-                });
-            });
-            
-            // 关闭错误面板
-            document.getElementById('closeError').addEventListener('click', () => {
-                document.getElementById('errorPanel').style.display = 'none';
-            });
-            
-            // AI主开关
-            document.getElementById('aiMasterToggle').addEventListener('click', toggleAI);
-            
-            // NPC控制按钮
-            document.getElementById('spawnEnemy').addEventListener('click', () => {
-                spawnNPC('enemy');
-            });
-            
-            document.getElementById('spawnAlly').addEventListener('click', () => {
-                spawnNPC('ally');
-            });
-            
-            document.getElementById('clearAI').addEventListener('click', clearAllNPCs);
-            
-            document.getElementById('toggleWeapons').addEventListener('click', () => {
-                document.getElementById('weaponPanel').classList.toggle('active');
-            });
-            
-            // 关闭武器面板
-            document.querySelector('.close-weapon').addEventListener('click', () => {
-                document.getElementById('weaponPanel').classList.remove('active');
-            });
-            
-            // 角色选择
-            document.querySelectorAll('.character-model').forEach(model => {
-                model.addEventListener('click', () => {
-                    document.querySelectorAll('.character-model').forEach(m => m.classList.remove('selected'));
-                    model.classList.add('selected');
-                    selectedCharacter = model.dataset.model;
-                });
-            });
-            
-            // 武器选择
-            document.querySelectorAll('.weapon-item').forEach(weapon => {
-                weapon.addEventListener('click', () => {
-                    document.querySelectorAll('.weapon-item').forEach(w => w.classList.remove('selected'));
-                    weapon.classList.add('selected');
-                    selectedWeapon = weapon.dataset.weapon;
-                });
-            });
-            
-            // 模式选择事件
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentMode = btn.dataset.mode;
-                    updateHUD();
-                });
-            });
-            
-            // 控制台事件
-            document.getElementById('executeLuaBtn').addEventListener('click', executeLuaFromInput);
-            document.getElementById('luaInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') executeLuaFromInput();
-            });
-            
-            // 隐藏开始屏幕
-            document.getElementById('startScreen').style.display = 'none';
-            
-            // 显示HUD和Lua控制台
-            document.getElementById('hud').style.display = 'block';
-            document.getElementById('luaConsole').style.display = 'flex';
-            
-            // 在移动设备上显示控制面板
-            if ('ontouchstart' in window) {
-                document.querySelector('.mobile-controls').style.display = 'flex';
-            }
-            
-            // 初始化游戏控制按钮
-            initGameControlButtons();
-            
-            // 开始游戏循环
-            animate();
-        }
-        
-        // 初始化游戏控制按钮
-        function initGameControlButtons() {
-            const startBtn = document.getElementById('startButton');
-            const pauseBtn = document.getElementById('pauseButton');
-            const restartBtn = document.getElementById('restartButton');
-            const exitBtn = document.getElementById('exitButton');
-            
-            startBtn.addEventListener('click', () => {
-                if (!gameRunning) {
-                    startGame();
-                }
-            });
-            
-            pauseBtn.addEventListener('click', () => {
-                if (gameRunning) {
-                    togglePause();
-                }
-            });
-            
-            restartBtn.addEventListener('click', () => {
-                restartGame();
-            });
-            
-            exitBtn.addEventListener('click', () => {
-                exitGame();
-            });
-        }
-        
-        // 开始游戏
-        function startGame() {
-            gameRunning = true;
-            gamePaused = false;
-            updateGameStatus();
-            addLog('> 游戏已启动', 'success');
-            
-            // 更新按钮状态
-            const startBtn = document.getElementById('startButton');
-            startBtn.classList.add('running');
-            startBtn.innerHTML = '<i class="fas fa-play"></i> 运行中';
-        }
-        
-        // 暂停游戏
-        function togglePause() {
-            gamePaused = !gamePaused;
-            updateGameStatus();
-            
-            const pauseBtn = document.getElementById('pauseButton');
-            if (gamePaused) {
-                pauseBtn.classList.add('paused');
-                pauseBtn.innerHTML = '<i class="fas fa-play"></i> 继续';
-                addLog('> 游戏已暂停', 'warning');
-            } else {
-                pauseBtn.classList.remove('paused');
-                pauseBtn.innerHTML = '<i class="fas fa-pause"></i> 暂停';
-                addLog('> 游戏已继续', 'success');
-            }
-        }
-        
-        // 重启游戏
-        function restartGame() {
-            // 清除所有实体
-            props.forEach(prop => {
-                scene.remove(prop.mesh);
-                world.removeBody(prop.body);
-            });
-            
-            npcs.forEach(npc => {
-                scene.remove(npc.mesh);
-                world.removeBody(npc.body);
-            });
-            
-            // 重置变量
-            props = [];
-            npcs = [];
-            ragdolls = [];
-            constraints = [];
-            
-            // 重新创建玩家和初始实体
-            createPlayer();
-            createProp(5, 1, 0, 0xff0000);
-            createProp(-5, 1, 0, 0x00ff00);
-            createProp(0, 1, 5, 0x0000ff);
-            spawnNPC('soldier', 'rifle', '
+        .hud-ite
