@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GMod Web Playground</title>
+    <!-- 1. 替换为移动端适配更好的Cannon-ES，解决物理引擎兼容性问题 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -252,7 +253,78 @@
             font-size: 12px;
         }
         
+        /* 2. 补充闭合大括号，修复CSS语法错误，确保样式正常加载 */
         .console-input {
             display: flex;
             padding: 8px;
-       
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div class="toolbar">
+            <div class="logo">GMod Web Playground</div>
+            <div class="mode-selector">
+                <button class="mode-btn active">编辑</button>
+                <button class="mode-btn">游玩</button>
+            </div>
+            <div class="tools">
+                <button class="tool-btn"><<i class="fas fa-cube"></</i> 道具</button>
+                <button class="tool-btn"><<i class="fas fa-sliders-h"></</i> 设置</button>
+            </div>
+        </div>
+        <div class="mobile-controls">
+            <div class="joystick-container">
+                <div class="joystick"></div>
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn"><<i class="fas fa-hand-pointer"></</i></button>
+                <button class="action-btn"><<i class="fas fa-plus"></</i></button>
+            </div>
+        </div>
+        <div id="hud">
+            <div class="hud-section">
+                <div class="hud-title">当前道具 <<i class="fas fa-chevron-down"></</i></div>
+                <div class="hud-content">
+                    <div class="hud-item"><div class="hud-icon">块</div> 基础方块</div>
+                    <div class="hud-item"><div class="hud-icon">球</div> 物理球体</div>
+                </div>
+            </div>
+            <div class="hud-section">
+                <div class="hud-title">性能 <<i class="fas fa-chevron-down"></</i></div>
+                <div class="hud-content">
+                    <div class="hud-item">FPS: 60</div>
+                    <div class="hud-item">物体: 0</div>
+                </div>
+            </div>
+        </div>
+        <div id="luaConsole">
+            <div class="console-header">
+                <div class="console-title">Lua 控制台</div>
+                <<i class="fas fa-times"></</i>
+            </div>
+            <div class="console-body">
+                > 控制台已启动
+                <br>> 等待输入指令...
+            </div>
+            <div class="console-input">
+                <input type="text" placeholder="输入Lua指令...">
+            </div>
+        </div>
+    </div>
+
+    <!-- 注意：如果后续加Three.js/Cannon-ES的逻辑代码，Cannon相关API要改：Cannon.World → CANNON.World -->
+    <script>
+        // 示例：简单初始化画布（确保手机端能看到基础渲染）
+        const canvas = document.getElementById('gameCanvas');
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        // 适配窗口 resize（手机旋转屏幕也能正常显示）
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
