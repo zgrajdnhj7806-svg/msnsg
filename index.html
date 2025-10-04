@@ -3,142 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GMod Web Playground - 可折叠UI</title>
+    <title>GMod Web Playground</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gltf-loader@1.0.0/dist/gltf-loader.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             touch-action: manipulation;
         }
         
         body {
             overflow: hidden;
-            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            background: #0a1929;
             color: #fff;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        /* 游戏状态指示器 */
-        #gameStatus {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 5px 10px;
-            border-radius: 15px;
-            border: 1px solid #00a8ff;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            z-index: 100;
-            font-size: 12px;
-            backdrop-filter: blur(5px);
-            transition: all 0.3s;
-        }
-        
-        #gameStatus.collapsed {
-            transform: translateX(-80px);
-        }
-        
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #ff416c;
-        }
-        
-        .status-indicator.running {
-            background: #00ff9d;
-            box-shadow: 0 0 5px #00ff9d;
-        }
-        
-        .status-indicator.paused {
-            background: #ffcc00;
-            box-shadow: 0 0 5px #ffcc00;
-        }
-        
-        /* 游戏运行控制面板 */
-        #gameControlPanel {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.85);
-            border-radius: 8px;
-            padding: 10px;
-            width: 280px;
-            z-index: 100;
-            backdrop-filter: blur(5px);
-            border: 1px solid #00a8ff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-        
-        #gameControlPanel.collapsed {
-            transform: translateY(calc(100% - 40px));
-        }
-        
-        .control-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(50, 50, 70, 0.8);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .control-btn i {
-            font-size: 16px;
-            margin-bottom: 3px;
-        }
-        
-        .control-btn:hover {
-            transform: translateY(-3px);
-            border-color: #00a8ff;
-            background: rgba(0, 168, 255, 0.2);
-        }
-        
-        .control-btn:active {
-            transform: translateY(0);
-        }
-        
-        .control-btn.running {
-            background: rgba(0, 255, 157, 0.2);
-            border-color: #00ff9d;
-        }
-        
-        .control-btn.paused {
-            background: rgba(255, 204, 0, 0.2);
-            border-color: #ffcc00;
-        }
-        
-        /* 主游戏区域 */
         #gameContainer {
-            flex: 1;
             position: relative;
-            overflow: hidden;
-            display: flex;
+            width: 100%;
+            height: 100vh;
         }
         
         #gameCanvas {
@@ -150,48 +38,113 @@
             z-index: 1;
         }
         
-        /* 移动控制面板 */
-        .mobile-controls {
+        .toolbar {
             position: absolute;
-            bottom: 10px;
+            top: 0;
             left: 0;
             width: 100%;
-            display: none;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
             justify-content: space-between;
-            padding: 0 10px;
+            align-items: center;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+            border-bottom: 1px solid #00a8ff;
+        }
+        
+        .logo {
+            font-size: 18px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00a8ff, #00ff9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .mode-btn {
+            padding: 6px 10px;
+            background: rgba(50, 50, 70, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .mode-btn.active {
+            background: rgba(0, 168, 255, 0.3);
+            border-color: #00a8ff;
+        }
+        
+        .tools {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .tool-btn {
+            padding: 6px 10px;
+            background: rgba(50, 50, 70, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .tool-btn.active {
+            background: rgba(0, 168, 255, 0.3);
+            border-color: #00a8ff;
+        }
+        
+        .mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
             pointer-events: none;
-            z-index: 50;
+            z-index: 20;
         }
         
         .joystick-container {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             position: relative;
             pointer-events: auto;
         }
         
         .joystick {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             position: absolute;
-            top: 25px;
-            left: 25px;
+            top: 30px;
+            left: 30px;
             border: 2px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
         
         .action-buttons {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
             pointer-events: auto;
         }
         
         .action-btn {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: rgba(255, 100, 100, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.5);
@@ -199,28 +152,25 @@
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 20px;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+            font-size: 24px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
         
-        /* HUD界面 */
+        .action-btn:active {
+            background: rgba(255, 100, 100, 0.5);
+        }
+        
         #hud {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
+            bottom: 20px;
+            left: 20px;
             background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             border: 1px solid #00a8ff;
             backdrop-filter: blur(5px);
-            max-width: 280px;
-            display: none;
-            z-index: 60;
-            transition: all 0.3s;
-        }
-        
-        #hud.collapsed {
-            transform: translateX(-calc(100% - 40px));
+            z-index: 15;
+            max-width: 300px;
         }
         
         .hud-section {
@@ -231,15 +181,9 @@
             color: #00ff9d;
             margin-bottom: 5px;
             font-size: 14px;
-            border-bottom: 1px solid #00a8ff;
-            padding-bottom: 3px;
             display: flex;
             justify-content: space-between;
             cursor: pointer;
-        }
-        
-        .hud-title i {
-            font-size: 10px;
         }
         
         .hud-content {
@@ -248,4 +192,67 @@
             gap: 5px;
         }
         
-        .hud-ite
+        .hud-item {
+            background: rgba(30, 30, 50, 0.7);
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .hud-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        
+        #luaConsole {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 180px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 8px;
+            border: 1px solid #ff416c;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(5px);
+            z-index: 25;
+        }
+        
+        .console-header {
+            background: rgba(255, 65, 108, 0.2);
+            padding: 8px 12px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #ff416c;
+            cursor: pointer;
+        }
+        
+        .console-title {
+            color: #ff416c;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .console-body {
+            flex: 1;
+            padding: 8px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .console-input {
+            display: flex;
+            padding: 8px;
+       
