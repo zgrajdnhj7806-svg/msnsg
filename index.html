@@ -26,6 +26,40 @@
             flex-direction: column;
         }
         
+        /* 游戏状态指示器 */
+        #gameStatus {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #00a8ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff416c;
+        }
+        
+        .status-indicator.running {
+            background: #00ff9d;
+            box-shadow: 0 0 10px #00ff9d;
+        }
+        
+        .status-indicator.paused {
+            background: #ffcc00;
+            box-shadow: 0 0 10px #ffcc00;
+        }
+        
         /* 游戏运行控制面板 */
         #gameControlPanel {
             position: absolute;
@@ -103,6 +137,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            z-index: 1; /* 确保画布在底层 */
         }
         
         /* 移动控制面板 */
@@ -170,6 +205,7 @@
             backdrop-filter: blur(5px);
             max-width: 300px;
             display: none;
+            z-index: 60; /* 确保HUD在画布上方 */
         }
         
         .hud-section {
@@ -223,7 +259,7 @@
             display: none;
             flex-direction: column;
             backdrop-filter: blur(5px);
-            z-index: 20;
+            z-index: 70; /* 确保控制台在画布上方 */
         }
         
         .console-header {
@@ -372,7 +408,7 @@
             color: #aaa;
         }
         
-        #startButton {
+        #startGameButton {
             padding: 15px 60px;
             font-size: 24px;
             background: linear-gradient(45deg, #00a8ff, #00ff9d);
@@ -385,7 +421,7 @@
             box-shadow: 0 0 20px rgba(0, 168, 255, 0.5);
         }
         
-        #startButton:hover {
+        #startGameButton:hover {
             transform: scale(1.05);
             box-shadow: 0 0 30px rgba(0, 168, 255, 0.8);
         }
@@ -451,40 +487,6 @@
         .character-name {
             font-size: 10px;
             text-align: center;
-        }
-        
-        /* 游戏状态指示器 */
-        #gameStatus {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: 1px solid #00a8ff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 100;
-            font-size: 14px;
-            backdrop-filter: blur(5px);
-        }
-        
-        .status-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #ff416c;
-        }
-        
-        .status-indicator.running {
-            background: #00ff9d;
-            box-shadow: 0 0 10px #00ff9d;
-        }
-        
-        .status-indicator.paused {
-            background: #ffcc00;
-            box-shadow: 0 0 10px #ffcc00;
         }
         
         /* 响应式设计 */
@@ -779,6 +781,9 @@
         let gameRunning = false;
         let gamePaused = false;
         
+        // 测试立方体引用
+        let testCube = null;
+        
         // 武器数据
         const weapons = {
             pistol: { name: "手枪", icon: "🔫", damage: 10 },
@@ -859,654 +864,4 @@
                 // 更新位置
                 this.mesh.position.copy(this.body.position);
                 
-                // AI行为
-                if (this.team === 'enemy') {
-                    // 敌对AI行为
-                    const playerDist = this.body.position.distanceTo(playerBody.position);
-                    
-                    if (playerDist < this.attackRange) {
-                        // 攻击玩家
-                        this.aiState = 'attack';
-                        this.body.velocity.x = (playerBody.position.x - this.body.position.x) * 0.1;
-                        this.body.velocity.z = (playerBody.position.z - this.body.position.z) * 0.1;
-                    } else {
-                        // 巡逻
-                        this.aiState = 'patrol';
-                        const dir = new THREE.Vector3().subVectors(this.patrolTarget, this.body.position);
-                        if (dir.length() < 2) {
-                            this.patrolTarget.set(
-                                (Math.random() - 0.5) * 30,
-                                1,
-                                (Math.random() - 0.5) * 30
-                            );
-                        } else {
-                            dir.normalize().multiplyScalar(0.05);
-                            this.body.velocity.x = dir.x;
-                            this.body.velocity.z = dir.z;
-                        }
-                    }
-                } else {
-                    // 友军AI行为
-                    const playerDist = this.body.position.distanceTo(playerBody.position);
-                    
-                    if (playerDist > 10) {
-                        // 跟随玩家
-                        this.aiState = 'follow';
-                        const dir = new THREE.Vector3().subVectors(playerBody.position, this.body.position);
-                        dir.normalize().multiplyScalar(0.03);
-                        this.body.velocity.x = dir.x;
-                        this.body.velocity.z = dir.z;
-                    } else {
-                        // 待命
-                        this.aiState = 'idle';
-                    }
-                }
-            }
-            
-            takeDamage(amount) {
-                this.health -= amount;
-                if (this.health <= 0) {
-                    this.destroy();
-                    return true;
-                }
-                return false;
-            }
-            
-            destroy() {
-                scene.remove(this.mesh);
-                world.removeBody(this.body);
-                npcs = npcs.filter(npc => npc !== this);
-                updateHUD();
-            }
-        }
-        
-        // 初始化
-        function init() {
-            // 创建场景
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x88ccff);
-            scene.fog = new THREE.Fog(0x88ccff, 0, 100);
-            
-            // 创建相机
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 1.6, 0);
-            
-            // 创建渲染器
-            renderer = new THREE.WebGLRenderer({ 
-                antialias: true,
-                powerPreference: "high-performance"
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 性能优化
-            document.getElementById('gameContainer').appendChild(renderer.domElement);
-            
-            // 创建物理世界
-            world = new CANNON.World();
-            world.gravity.set(0, -9.82, 0);
-            world.broadphase = new CANNON.NaiveBroadphase();
-            world.solver.iterations = 10;
-            world.defaultContactMaterial.friction = 0.1;
-            
-            // 添加光源
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 20, 10);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 1024;
-            directionalLight.shadow.mapSize.height = 1024;
-            scene.add(directionalLight);
-            
-            // 创建地面
-            createGround();
-            
-            // 创建玩家
-            createPlayer();
-            
-            // 创建一些初始物体
-            createProp(5, 1, 0, 0xff0000);
-            createProp(-5, 1, 0, 0x00ff00);
-            createProp(0, 1, 5, 0x0000ff);
-            
-            // 创建初始NPC
-            spawnNPC('soldier', 'rifle', 'enemy');
-            spawnNPC('scientist', 'pistol', 'ally');
-            
-            // 初始化武器面板
-            initWeaponPanel();
-            
-            // 初始化角色选择
-            initCharacterSelection();
-            
-            // 模拟局域网连接
-            simulateLANConnection();
-            
-            // 添加事件监听器
-            window.addEventListener('resize', onWindowResize);
-            document.addEventListener('keydown', onKeyDown);
-            document.addEventListener('keyup', onKeyUp);
-            
-            // 工具按钮事件
-            document.querySelectorAll('.tool-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentTool = btn.dataset.tool;
-                    updateHUD();
-                    
-                    // 显示AI控制面板
-                    if (btn.id === 'aiToggle') {
-                        document.getElementById('aiControlPanel').style.display = 'block';
-                    }
-                    
-                    // 切换聊天面板
-                    if (btn.id === 'chatToggle') {
-                        chatVisible = !chatVisible;
-                        document.getElementById('chatPanel').classList.toggle('active');
-                    }
-                });
-            });
-            
-            // 关闭错误面板
-            document.getElementById('closeError').addEventListener('click', () => {
-                document.getElementById('errorPanel').style.display = 'none';
-            });
-            
-            // AI主开关
-            document.getElementById('aiMasterToggle').addEventListener('click', toggleAI);
-            
-            // NPC控制按钮
-            document.getElementById('spawnEnemy').addEventListener('click', () => {
-                spawnNPC('enemy');
-            });
-            
-            document.getElementById('spawnAlly').addEventListener('click', () => {
-                spawnNPC('ally');
-            });
-            
-            document.getElementById('clearAI').addEventListener('click', clearAllNPCs);
-            
-            document.getElementById('toggleWeapons').addEventListener('click', () => {
-                document.getElementById('weaponPanel').classList.toggle('active');
-            });
-            
-            // 关闭武器面板
-            document.querySelector('.close-weapon').addEventListener('click', () => {
-                document.getElementById('weaponPanel').classList.remove('active');
-            });
-            
-            // 角色选择
-            document.querySelectorAll('.character-model').forEach(model => {
-                model.addEventListener('click', () => {
-                    document.querySelectorAll('.character-model').forEach(m => m.classList.remove('selected'));
-                    model.classList.add('selected');
-                    selectedCharacter = model.dataset.model;
-                });
-            });
-            
-            // 武器选择
-            document.querySelectorAll('.weapon-item').forEach(weapon => {
-                weapon.addEventListener('click', () => {
-                    document.querySelectorAll('.weapon-item').forEach(w => w.classList.remove('selected'));
-                    weapon.classList.add('selected');
-                    selectedWeapon = weapon.dataset.weapon;
-                });
-            });
-            
-            // 模式选择事件
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentMode = btn.dataset.mode;
-                    updateHUD();
-                });
-            });
-            
-            // 控制台事件
-            document.getElementById('executeLuaBtn').addEventListener('click', executeLuaFromInput);
-            document.getElementById('luaInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') executeLuaFromInput();
-            });
-            
-            // 隐藏开始屏幕
-            document.getElementById('startScreen').style.display = 'none';
-            
-            // 显示HUD和Lua控制台
-            document.getElementById('hud').style.display = 'block';
-            document.getElementById('luaConsole').style.display = 'flex';
-            
-            // 在移动设备上显示控制面板
-            if ('ontouchstart' in window) {
-                document.querySelector('.mobile-controls').style.display = 'flex';
-            }
-            
-            // 初始化游戏控制按钮
-            initGameControlButtons();
-            
-            // 开始游戏循环
-            animate();
-        }
-        
-        // 初始化游戏控制按钮
-        function initGameControlButtons() {
-            const startBtn = document.getElementById('startButton');
-            const pauseBtn = document.getElementById('pauseButton');
-            const restartBtn = document.getElementById('restartButton');
-            const exitBtn = document.getElementById('exitButton');
-            
-            startBtn.addEventListener('click', () => {
-                if (!gameRunning) {
-                    startGame();
-                }
-            });
-            
-            pauseBtn.addEventListener('click', () => {
-                if (gameRunning) {
-                    togglePause();
-                }
-            });
-            
-            restartBtn.addEventListener('click', () => {
-                restartGame();
-            });
-            
-            exitBtn.addEventListener('click', () => {
-                exitGame();
-            });
-        }
-        
-        // 开始游戏
-        function startGame() {
-            gameRunning = true;
-            gamePaused = false;
-            updateGameStatus();
-            addLog('> 游戏已启动', 'success');
-            
-            // 更新按钮状态
-            const startBtn = document.getElementById('startButton');
-            startBtn.classList.add('running');
-            startBtn.innerHTML = '<i class="fas fa-play"></i> 运行中';
-        }
-        
-        // 暂停游戏
-        function togglePause() {
-            gamePaused = !gamePaused;
-            updateGameStatus();
-            
-            const pauseBtn = document.getElementById('pauseButton');
-            if (gamePaused) {
-                pauseBtn.classList.add('paused');
-                pauseBtn.innerHTML = '<i class="fas fa-play"></i> 继续';
-                addLog('> 游戏已暂停', 'warning');
-            } else {
-                pauseBtn.classList.remove('paused');
-                pauseBtn.innerHTML = '<i class="fas fa-pause"></i> 暂停';
-                addLog('> 游戏已继续', 'success');
-            }
-        }
-        
-        // 重启游戏
-        function restartGame() {
-            // 清除所有实体
-            props.forEach(prop => {
-                scene.remove(prop.mesh);
-                world.removeBody(prop.body);
-            });
-            
-            npcs.forEach(npc => {
-                scene.remove(npc.mesh);
-                world.removeBody(npc.body);
-            });
-            
-            // 重置变量
-            props = [];
-            npcs = [];
-            ragdolls = [];
-            constraints = [];
-            
-            // 重新创建玩家和初始实体
-            createPlayer();
-            createProp(5, 1, 0, 0xff0000);
-            createProp(-5, 1, 0, 0x00ff00);
-            createProp(0, 1, 5, 0x0000ff);
-            spawnNPC('soldier', 'rifle', 'enemy');
-            spawnNPC('scientist', 'pistol', 'ally');
-            
-            // 确保游戏在运行状态
-            if (!gameRunning) {
-                startGame();
-            } else if (gamePaused) {
-                togglePause();
-            }
-            
-            addLog('> 游戏已重启', 'success');
-        }
-        
-        // 退出游戏
-        function exitGame() {
-            gameRunning = false;
-            gamePaused = false;
-            updateGameStatus();
-            addLog('> 游戏已退出', 'warning');
-            
-            // 更新按钮状态
-            const startBtn = document.getElementById('startButton');
-            startBtn.classList.remove('running', 'paused');
-            startBtn.innerHTML = '<i class="fas fa-play"></i> 开始';
-        }
-        
-        // 更新游戏状态显示
-        function updateGameStatus() {
-            const statusIndicator = document.querySelector('#gameStatus .status-indicator');
-            const statusText = document.querySelector('#gameStatus span');
-            
-            statusIndicator.className = 'status-indicator';
-            
-            if (gameRunning && !gamePaused) {
-                statusIndicator.classList.add('running');
-                statusText.textContent = '游戏状态: 运行中';
-            } else if (gameRunning && gamePaused) {
-                statusIndicator.classList.add('paused');
-                statusText.textContent = '游戏状态: 已暂停';
-            } else {
-                statusText.textContent = '游戏状态: 已停止';
-            }
-        }
-        
-        // 更新HUD
-        function updateHUD() {
-            document.getElementById('propCount').textContent = props.length;
-            document.getElementById('npcCount').textContent = npcs.length;
-            document.getElementById('enemyCount').textContent = npcs.filter(npc => npc.team === 'enemy').length;
-            document.getElementById('allyCount').textContent = npcs.filter(npc => npc.team === 'ally').length;
-        }
-        
-        // 添加日志
-        function addLog(message, type = 'info') {
-            const logEntry = document.createElement('div');
-            logEntry.className = `log-entry ${type}`;
-            logEntry.textContent = message;
-            document.getElementById('consoleOutput').appendChild(logEntry);
-            document.getElementById('consoleOutput').scrollTop = document.getElementById('consoleOutput').scrollHeight;
-        }
-        
-        // 模拟局域网连接
-        function simulateLANConnection() {
-            console.log("正在初始化局域网联机...");
-            
-            // 模拟发现其他玩家
-            setTimeout(() => {
-                console.log("已连接到局域网房间: 192.168.1.100:25565");
-                console.log("发现3名玩家在线");
-            }, 2000);
-            
-            // 模拟P2P连接
-            setTimeout(() => {
-                console.log("已建立P2P连接");
-            }, 3000);
-        }
-        
-        // 键盘事件
-        function onKeyDown(event) {
-            if (!gameRunning || gamePaused) return;
-            
-            switch(event.key.toLowerCase()) {
-                case 'w':
-                    playerBody.velocity.z = -5;
-                    break;
-                case 's':
-                    playerBody.velocity.z = 5;
-                    break;
-                case 'a':
-                    playerBody.velocity.x = -5;
-                    break;
-                case 'd':
-                    playerBody.velocity.x = 5;
-                    break;
-                case ' ':
-                    playerBody.velocity.y = 8;
-                    break;
-                case 'v':
-                    // 起飞功能
-                    playerBody.velocity.y = 15;
-                    break;
-            }
-        }
-        
-        function onKeyUp(event) {
-            if (!gameRunning || gamePaused) return;
-            
-            switch(event.key.toLowerCase()) {
-                case 'w':
-                case 's':
-                    playerBody.velocity.z = 0;
-                    break;
-                case 'a':
-                case 'd':
-                    playerBody.velocity.x = 0;
-                    break;
-            }
-        }
-        
-        // 动画循环
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            // 更新物理世界
-            const delta = clock.getDelta();
-            world.step(1/60, delta, 3);
-            
-            // 更新玩家位置
-            player.position.copy(playerBody.position);
-            
-            // 更新NPC
-            if (gameRunning && !gamePaused) {
-                updateNPCs();
-            }
-            
-            renderer.render(scene, camera);
-        }
-        
-        // 初始化武器面板
-        function initWeaponPanel() {
-            const weaponList = document.getElementById('weaponList');
-            weaponList.innerHTML = '';
-            
-            for (const [key, weapon] of Object.entries(weapons)) {
-                const weaponItem = document.createElement('div');
-                weaponItem.className = 'weapon-item';
-                if (key === selectedWeapon) weaponItem.classList.add('selected');
-                weaponItem.dataset.weapon = key;
-                
-                weaponItem.innerHTML = `
-                    <div class="weapon-icon">${weapon.icon}</div>
-                    <div class="weapon-name">${weapon.name}</div>
-                `;
-                
-                weaponList.appendChild(weaponItem);
-            }
-        }
-        
-        // 初始化角色选择
-        function initCharacterSelection() {
-            const characterModels = document.querySelectorAll('.character-model');
-            characterModels.forEach(model => {
-                model.addEventListener('click', () => {
-                    characterModels.forEach(m => m.classList.remove('selected'));
-                    model.classList.add('selected');
-                    selectedCharacter = model.dataset.model;
-                });
-            });
-        }
-        
-        // 生成NPC
-        function spawnNPC(team = null, weapon = null, model = null) {
-            if (!gameRunning || gamePaused) return;
-            
-            const npcTeam = team || (Math.random() > 0.5 ? 'enemy' : 'ally');
-            const npcWeapon = weapon || selectedWeapon;
-            const npcModel = model || selectedCharacter;
-            
-            const npc = new NPC(npcModel, npcWeapon, npcTeam);
-            npcs.push(npc);
-            updateHUD();
-            
-            addLog(`> 生成${characters[npcModel].name} (${npcTeam}) 配备${weapons[npcWeapon].name}`, 'success');
-        }
-        
-        // 清除所有NPC
-        function clearAllNPCs() {
-            if (!gameRunning || gamePaused) return;
-            
-            npcs.forEach(npc => npc.destroy());
-            addLog('> 已清除所有NPC', 'warning');
-        }
-        
-        // 切换AI状态
-        function toggleAI() {
-            aiEnabled = !aiEnabled;
-            document.querySelector('.ai-toggle .toggle-switch').classList.toggle('active', aiEnabled);
-            document.querySelector('.ai-toggle span').textContent = aiEnabled ? 'AI 开启' : 'AI 关闭';
-            
-            npcs.forEach(npc => npc.aiEnabled = aiEnabled);
-            
-            addLog(`> AI系统已${aiEnabled ? '启用' : '禁用'}`, aiEnabled ? 'success' : 'warning');
-        }
-        
-        // NPC更新循环
-        function updateNPCs() {
-            npcs.forEach(npc => npc.update());
-        }
-        
-        // 创建地面
-        function createGround() {
-            // 物理地面
-            const groundShape = new CANNON.Plane();
-            const groundBody = new CANNON.Body({ mass: 0 });
-            groundBody.addShape(groundShape);
-            groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI/2);
-            world.addBody(groundBody);
-            
-            // 视觉地面
-            const groundGeometry = new THREE.PlaneGeometry(100, 100);
-            const groundMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x228822,
-                roughness: 0.8
-            });
-            const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
-            groundMesh.rotation.x = -Math.PI/2;
-            groundMesh.receiveShadow = true;
-            scene.add(groundMesh);
-            
-            // 添加一些随机物体
-            for (let i = 0; i < 20; i++) {
-                const x = (Math.random() - 0.5) * 80;
-                const z = (Math.random() - 0.5) * 80;
-                const size = Math.random() * 2 + 1;
-                createProp(x, size/2, z, Math.random() * 0xffffff);
-            }
-        }
-        
-        // 创建玩家
-        function createPlayer() {
-            // 玩家物理体
-            const playerShape = new CANNON.Cylinder(0.5, 0.5, 1.8, 16);
-            playerBody = new CANNON.Body({ mass: 5 });
-            playerBody.addShape(playerShape);
-            playerBody.position.set(0, 1.8, 0);
-            playerBody.angularDamping = 0.5;
-            world.addBody(playerBody);
-            
-            // 玩家视觉模型
-            const playerGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1.8, 16);
-            const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x4444ff });
-            player = new THREE.Mesh(playerGeometry, playerMaterial);
-            player.castShadow = true;
-            scene.add(player);
-            
-            // 摄像机跟随玩家
-            player.add(camera);
-        }
-        
-        // 创建物体
-        function createProp(x, y, z, color) {
-            const size = Math.random() * 1 + 0.5;
-            
-            // 物理物体
-            const propShape = new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2));
-            const propBody = new CANNON.Body({ mass: 1 });
-            propBody.addShape(propShape);
-            propBody.position.set(x, y, z);
-            world.addBody(propBody);
-            
-            // 视觉物体
-            const propGeometry = new THREE.BoxGeometry(size, size, size);
-            const propMaterial = new THREE.MeshStandardMaterial({ 
-                color: color || 0xffaa00,
-                roughness: 0.7
-            });
-            const propMesh = new THREE.Mesh(propGeometry, propMaterial);
-            propMesh.castShadow = true;
-            propMesh.receiveShadow = true;
-            scene.add(propMesh);
-            
-            // 保存引用
-            const prop = {
-                mesh: propMesh,
-                body: propBody,
-                type: 'prop'
-            };
-            
-            props.push(prop);
-            updateHUD();
-            
-            addLog(`> 生成物体: ${color ? '#' + color.toString(16) : '随机颜色'}`, 'success');
-            
-            return prop;
-        }
-        
-        // 执行Lua命令
-        function executeLuaCommand(command) {
-            if (!gameRunning || gamePaused) {
-                addLog('> 游戏未运行，无法执行命令', 'error');
-                return;
-            }
-            
-            addLog(`> 执行命令: ${command}`, 'info');
-            
-            // 模拟命令执行
-            if (command.startsWith('SpawnNPC')) {
-                const parts = command.split(',');
-                const team = parts[2]?.trim().replace(/"/g, '') || null;
-                const weapon = parts[1]?.trim().replace(/"/g, '') || null;
-                const model = parts[0]?.split('(')[1]?.trim().replace(/"/g, '') || null;
-                
-                spawnNPC(team, weapon, model);
-            } else if (command === 'ClearAllNPCs()') {
-                clearAllNPCs();
-            } else if (command === 'ToggleAI()') {
-                toggleAI();
-            } else {
-                addLog(`> 未知命令: ${command}`, 'warning');
-            }
-        }
-        
-        // 模拟Lua控制台执行
-        function executeLuaFromInput() {
-            const input = document.getElementById('luaInput');
-            const command = input.value.trim();
-            
-            if (command) {
-                executeLuaCommand(command);
-                input.value = '';
-            }
-        }
-        
-        // 初始化游戏
-        init();
-    </script>
-</body>
-</html>
+                // AI
