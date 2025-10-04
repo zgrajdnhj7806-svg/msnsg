@@ -864,4 +864,329 @@
                 // 更新位置
                 this.mesh.position.copy(this.body.position);
                 
-                // AI
+                // AI行为
+                if (this.team === 'enemy') {
+                    // 敌对AI行为
+                    const playerDist = this.body.position.distanceTo(playerBody.position);
+                    
+                    if (playerDist < this.attackRange) {
+                        // 攻击玩家
+                        this.aiState = 'attack';
+                        this.body.velocity.x = (playerBody.position.x - this.body.position.x) * 0.1;
+                        this.body.velocity.z = (playerBody.position.z - this.body.position.z) * 0.1;
+                    } else {
+                        // 巡逻
+                        this.aiState = 'patrol';
+                        const dir = new THREE.Vector3().subVectors(this.patrolTarget, this.body.position);
+                        if (dir.length() < 2) {
+                            this.patrolTarget.set(
+                                (Math.random() - 0.5) * 30,
+                                1,
+                                (Math.random() - 0.5) * 30
+                            );
+                        } else {
+                            dir.normalize().multiplyScalar(0.05);
+                            this.body.velocity.x = dir.x;
+                            this.body.velocity.z = dir.z;
+                        }
+                    }
+                } else {
+                    // 友军AI行为
+                    const playerDist = this.body.position.distanceTo(playerBody.position);
+                    
+                    if (playerDist > 10) {
+                        // 跟随玩家
+                        this.aiState = 'follow';
+                        const dir = new THREE.Vector3().subVectors(playerBody.position, this.body.position);
+                        dir.normalize().multiplyScalar(0.03);
+                        this.body.velocity.x = dir.x;
+                        this.body.velocity.z = dir.z;
+                    } else {
+                        // 待命
+                        this.aiState = 'idle';
+                    }
+                }
+            }
+            
+            takeDamage(amount) {
+                this.health -= amount;
+                if (this.health <= 0) {
+                    this.destroy();
+                    return true;
+                }
+                return false;
+            }
+            
+            destroy() {
+                scene.remove(this.mesh);
+                world.removeBody(this.body);
+                npcs = npcs.filter(npc => npc !== this);
+                updateHUD();
+            }
+        }
+        
+        // 初始化
+        function init() {
+            // 创建场景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x88ccff);
+            scene.fog = new THREE.Fog(0x88ccff, 0, 100);
+            
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 1.6, 0);
+            
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                powerPreference: "high-performance",
+                alpha: true // 确保背景透明
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 性能优化
+            document.getElementById('gameContainer').appendChild(renderer.domElement);
+            
+            // 创建物理世界
+            world = new CANNON.World();
+            world.gravity.set(0, -9.82, 0);
+            world.broadphase = new CANNON.NaiveBroadphase();
+            world.solver.iterations = 10;
+            world.defaultContactMaterial.friction = 0.1;
+            
+            // 添加光源
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 1024;
+            directionalLight.shadow.mapSize.height = 1024;
+            scene.add(directionalLight);
+            
+            // 创建地面
+            createGround();
+            
+            // 创建玩家
+            createPlayer();
+            
+            // 创建测试立方体 - 确保有可见内容
+            const testGeometry = new THREE.BoxGeometry(2, 2, 2);
+            const testMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xff0000,
+                roughness: 0.7
+            });
+            testCube = new THREE.Mesh(testGeometry, testMaterial);
+            testCube.position.set(0, 1, 0);
+            testCube.castShadow = true;
+            scene.add(testCube);
+            
+            // 创建一些初始物体
+            createProp(5, 1, 0, 0xff0000);
+            createProp(-5, 1, 0, 0x00ff00);
+            createProp(0, 1, 5, 0x0000ff);
+            
+            // 创建初始NPC
+            spawnNPC('soldier', 'rifle', 'enemy');
+            spawnNPC('scientist', 'pistol', 'ally');
+            
+            // 初始化武器面板
+            initWeaponPanel();
+            
+            // 初始化角色选择
+            initCharacterSelection();
+            
+            // 模拟局域网连接
+            simulateLANConnection();
+            
+            // 添加事件监听器
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            
+            // 工具按钮事件
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTool = btn.dataset.tool;
+                    updateHUD();
+                    
+                    // 显示AI控制面板
+                    if (btn.id === 'aiToggle') {
+                        document.getElementById('aiControlPanel').style.display = 'block';
+                    }
+                    
+                    // 切换聊天面板
+                    if (btn.id === 'chatToggle') {
+                        chatVisible = !chatVisible;
+                        document.getElementById('chatPanel').classList.toggle('active');
+                    }
+                });
+            });
+            
+            // 关闭错误面板
+            document.getElementById('closeError').addEventListener('click', () => {
+                document.getElementById('errorPanel').style.display = 'none';
+            });
+            
+            // AI主开关
+            document.getElementById('aiMasterToggle').addEventListener('click', toggleAI);
+            
+            // NPC控制按钮
+            document.getElementById('spawnEnemy').addEventListener('click', () => {
+                spawnNPC('enemy');
+            });
+            
+            document.getElementById('spawnAlly').addEventListener('click', () => {
+                spawnNPC('ally');
+            });
+            
+            document.getElementById('clearAI').addEventListener('click', clearAllNPCs);
+            
+            document.getElementById('toggleWeapons').addEventListener('click', () => {
+                document.getElementById('weaponPanel').classList.toggle('active');
+            });
+            
+            // 关闭武器面板
+            document.querySelector('.close-weapon').addEventListener('click', () => {
+                document.getElementById('weaponPanel').classList.remove('active');
+            });
+            
+            // 角色选择
+            document.querySelectorAll('.character-model').forEach(model => {
+                model.addEventListener('click', () => {
+                    document.querySelectorAll('.character-model').forEach(m => m.classList.remove('selected'));
+                    model.classList.add('selected');
+                    selectedCharacter = model.dataset.model;
+                });
+            });
+            
+            // 武器选择
+            document.querySelectorAll('.weapon-item').forEach(weapon => {
+                weapon.addEventListener('click', () => {
+                    document.querySelectorAll('.weapon-item').forEach(w => w.classList.remove('selected'));
+                    weapon.classList.add('selected');
+                    selectedWeapon = weapon.dataset.weapon;
+                });
+            });
+            
+            // 模式选择事件
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentMode = btn.dataset.mode;
+                    updateHUD();
+                });
+            });
+            
+            // 控制台事件
+            document.getElementById('executeLuaBtn').addEventListener('click', executeLuaFromInput);
+            document.getElementById('luaInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') executeLuaFromInput();
+            });
+            
+            // 隐藏开始屏幕
+            document.getElementById('startScreen').style.display = 'none';
+            
+            // 显示HUD和Lua控制台
+            document.getElementById('hud').style.display = 'block';
+            document.getElementById('luaConsole').style.display = 'flex';
+            
+            // 在移动设备上显示控制面板
+            if ('ontouchstart' in window) {
+                document.querySelector('.mobile-controls').style.display = 'flex';
+            }
+            
+            // 初始化游戏控制按钮
+            initGameControlButtons();
+            
+            // 开始游戏循环
+            animate();
+        }
+        
+        // 初始化游戏控制按钮
+        function initGameControlButtons() {
+            const startBtn = document.getElementById('startButton');
+            const pauseBtn = document.getElementById('pauseButton');
+            const restartBtn = document.getElementById('restartButton');
+            const exitBtn = document.getElementById('exitButton');
+            
+            startBtn.addEventListener('click', () => {
+                if (!gameRunning) {
+                    startGame();
+                }
+            });
+            
+            pauseBtn.addEventListener('click', () => {
+                if (gameRunning) {
+                    togglePause();
+                }
+            });
+            
+            restartBtn.addEventListener('click', () => {
+                restartGame();
+            });
+            
+            exitBtn.addEventListener('click', () => {
+                exitGame();
+            });
+        }
+        
+        // 开始游戏
+        function startGame() {
+            gameRunning = true;
+            gamePaused = false;
+            updateGameStatus();
+            addLog('> 游戏已启动', 'success');
+            
+            // 更新按钮状态
+            const startBtn = document.getElementById('startButton');
+            startBtn.classList.add('running');
+            startBtn.innerHTML = '<i class="fas fa-play"></i> 运行中';
+        }
+        
+        // 暂停游戏
+        function togglePause() {
+            gamePaused = !gamePaused;
+            updateGameStatus();
+            
+            const pauseBtn = document.getElementById('pauseButton');
+            if (gamePaused) {
+                pauseBtn.classList.add('paused');
+                pauseBtn.innerHTML = '<i class="fas fa-play"></i> 继续';
+                addLog('> 游戏已暂停', 'warning');
+            } else {
+                pauseBtn.classList.remove('paused');
+                pauseBtn.innerHTML = '<i class="fas fa-pause"></i> 暂停';
+                addLog('> 游戏已继续', 'success');
+            }
+        }
+        
+        // 重启游戏
+        function restartGame() {
+            // 清除所有实体
+            props.forEach(prop => {
+                scene.remove(prop.mesh);
+                world.removeBody(prop.body);
+            });
+            
+            npcs.forEach(npc => {
+                scene.remove(npc.mesh);
+                world.removeBody(npc.body);
+            });
+            
+            // 重置变量
+            props = [];
+            npcs = [];
+            ragdolls = [];
+            constraints = [];
+            
+            // 重新创建玩家和初始实体
+            createPlayer();
+            createProp(5, 1, 0, 0xff0000);
+            createProp(-5, 1, 0, 0x00ff00);
+            createProp(0, 1, 5, 0x0000ff);
+            spawnNPC('soldier', 'rifle', '
