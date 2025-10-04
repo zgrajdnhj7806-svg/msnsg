@@ -2,9 +2,10 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GMod Web Playground</title>
-    <!-- 1. 替换为移动端适配更好的Cannon-ES，解决物理引擎兼容性问题 -->
+    <!-- 手机端适配关键：强制viewport不缩放，避免画面拉伸 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>GMod Web Playground（手机可用）</title>
+    <!-- 核心依赖：固定版本，避免手机端加载失败 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -13,7 +14,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            touch-action: manipulation;
+            touch-action: manipulation; /* 禁止手机端双指缩放，避免干扰摇杆 */
         }
         
         body {
@@ -21,15 +22,20 @@
             background: #0a1929;
             color: #fff;
             height: 100vh;
+            width: 100vw;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: fixed; /* 锁定窗口，防止手机端滚动 */
+            top: 0;
+            left: 0;
         }
         
         #gameContainer {
             position: relative;
-            width: 100%;
+            width: 100vw;
             height: 100vh;
         }
         
+        /* 游戏画布：手机端必须占满屏幕，且层级正确 */
         #gameCanvas {
             position: absolute;
             top: 0;
@@ -37,14 +43,16 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+            display: block; /* 解决手机端画布默认inline导致的空隙 */
         }
-        
+
+        /* 顶部工具栏：适配手机端宽度，按钮不挤 */
         .toolbar {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            padding: 10px;
+            padding: 8px 10px;
             background: rgba(0, 0, 0, 0.8);
             display: flex;
             justify-content: space-between;
@@ -55,7 +63,7 @@
         }
         
         .logo {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             background: linear-gradient(45deg, #00a8ff, #00ff9d);
             -webkit-background-clip: text;
@@ -64,17 +72,12 @@
         
         .mode-selector {
             display: flex;
-            gap: 5px;
+            gap: 4px;
         }
         
         .mode-btn {
-            padding: 6px 10px;
-            background: rgba(50, 50, 70, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-            color: white;
-            font-size: 12px;
-            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 11px;
         }
         
         .mode-btn.active {
@@ -84,179 +87,157 @@
         
         .tools {
             display: flex;
-            gap: 5px;
+            gap: 4px;
         }
         
         .tool-btn {
-            padding: 6px 10px;
-            background: rgba(50, 50, 70, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-            color: white;
-            font-size: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            gap: 3px;
         }
         
         .tool-btn.active {
             background: rgba(0, 168, 255, 0.3);
             border-color: #00a8ff;
         }
-        
+
+        /* 手机摇杆：放大点击区域，适配触屏 */
         .mobile-controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 30px;
             left: 0;
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 25px;
             pointer-events: none;
             z-index: 20;
         }
         
         .joystick-container {
-            width: 120px;
-            height: 120px;
-            position: relative;
+            width: 130px;
+            height: 130px;
             pointer-events: auto;
         }
         
         .joystick {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            width: 65px;
+            height: 65px;
+            top: 32.5px;
+            left: 32.5px;
         }
         
         .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            gap: 20px;
             pointer-events: auto;
         }
         
         .action-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: rgba(255, 100, 100, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            width: 65px;
+            height: 65px;
+            font-size: 26px;
         }
-        
-        .action-btn:active {
-            background: rgba(255, 100, 100, 0.5);
+
+        /* 可移动窗口：适配手机端触摸拖动 */
+        #hud, #luaConsole, #propLibrary, #toolGun {
+            cursor: grab;
+            user-select: none;
         }
-        
+        #hud:active, #luaConsole:active, #propLibrary:active, #toolGun:active {
+            cursor: grabbing;
+        }
+
+        /* 以下样式保持GMod风格，仅优化手机端字体大小 */
         #hud {
-            position: absolute;
-            bottom: 20px;
+            bottom: 180px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #00a8ff;
-            backdrop-filter: blur(5px);
-            z-index: 15;
-            max-width: 300px;
-        }
-        
-        .hud-section {
-            margin-bottom: 10px;
+            padding: 10px;
+            max-width: 280px;
         }
         
         .hud-title {
-            color: #00ff9d;
-            margin-bottom: 5px;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            cursor: pointer;
-        }
-        
-        .hud-content {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
+            font-size: 13px;
         }
         
         .hud-item {
-            background: rgba(30, 30, 50, 0.7);
-            padding: 5px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .hud-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 3px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
+            padding: 4px 7px;
+            font-size: 11px;
         }
         
         #luaConsole {
-            position: absolute;
-            bottom: 20px;
+            bottom: 180px;
             right: 20px;
-            width: 300px;
-            height: 180px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 8px;
-            border: 1px solid #ff416c;
-            display: flex;
-            flex-direction: column;
-            backdrop-filter: blur(5px);
-            z-index: 25;
-        }
-        
-        .console-header {
-            background: rgba(255, 65, 108, 0.2);
-            padding: 8px 12px;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #ff416c;
-            cursor: pointer;
+            width: 280px;
+            height: 160px;
         }
         
         .console-title {
-            color: #ff416c;
-            font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
         }
         
         .console-body {
-            flex: 1;
-            padding: 8px;
-            overflow-y: auto;
-            font-family: monospace;
+            font-size: 11px;
+        }
+        
+        .console-input input {
+            padding: 5px 7px;
+            font-size: 11px;
+        }
+        
+        #propLibrary {
+            top: 70px;
+            left: 20px;
+            width: 300px;
+            height: 380px;
+            display: none;
+        }
+        
+        .lib-title {
+            font-size: 15px;
+        }
+        
+        .lib-tab {
+            padding: 7px 12px;
             font-size: 12px;
         }
         
-        /* 2. 补充闭合大括号，修复CSS语法错误，确保样式正常加载 */
-        .console-input {
-            display: flex;
-            padding: 8px;
+        .lib-cat-title {
+            font-size: 13px;
+        }
+        
+        .lib-item {
+            padding: 7px 10px;
+            font-size: 11px;
+        }
+        
+        #toolGun {
+            top: 70px;
+            right: 20px;
+            width: 270px;
+            height: 300px;
+            display: none;
+        }
+        
+        .toolgun-title {
+            font-size: 15px;
+        }
+        
+        .tool-name {
+            font-size: 13px;
+        }
+        
+        .tool-desc {
+            font-size: 10px;
+        }
+        
+        .tool-setting {
+            font-size: 11px;
+        }
+        
+        /* 全屏提示：手机端更醒目 */
+        #fullscreenTip {
+            padding: 12px 18px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -264,67 +245,21 @@
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         <div class="toolbar">
-            <div class="logo">GMod Web Playground</div>
+            <div class="logo">GMod Web</div>
             <div class="mode-selector">
-                <button class="mode-btn active">编辑</button>
-                <button class="mode-btn">游玩</button>
+                <button class="mode-btn active" id="editMode">编辑</button>
+                <button class="mode-btn" id="playMode">游玩</button>
             </div>
             <div class="tools">
-                <button class="tool-btn"><<i class="fas fa-cube"></</i> 道具</button>
-                <button class="tool-btn"><<i class="fas fa-sliders-h"></</i> 设置</button>
+                <button class="tool-btn" id="propBtn"><<i class="fas fa-cube"></</i> 道具</button>
+                <button class="tool-btn" id="toolGunBtn"><<i class="fas fa-wrench"></</i> 工具枪</button>
+                <button class="tool-btn" id="fullscreenBtn"><<i class="fas fa-expand"></</i> 全屏</button>
             </div>
         </div>
         <div class="mobile-controls">
-            <div class="joystick-container">
-                <div class="joystick"></div>
+            <div class="joystick-container" id="moveJoystickContainer">
+                <div class="joystick" id="moveJoystick"></div>
             </div>
             <div class="action-buttons">
-                <button class="action-btn"><<i class="fas fa-hand-pointer"></</i></button>
-                <button class="action-btn"><<i class="fas fa-plus"></</i></button>
-            </div>
-        </div>
-        <div id="hud">
-            <div class="hud-section">
-                <div class="hud-title">当前道具 <<i class="fas fa-chevron-down"></</i></div>
-                <div class="hud-content">
-                    <div class="hud-item"><div class="hud-icon">块</div> 基础方块</div>
-                    <div class="hud-item"><div class="hud-icon">球</div> 物理球体</div>
-                </div>
-            </div>
-            <div class="hud-section">
-                <div class="hud-title">性能 <<i class="fas fa-chevron-down"></</i></div>
-                <div class="hud-content">
-                    <div class="hud-item">FPS: 60</div>
-                    <div class="hud-item">物体: 0</div>
-                </div>
-            </div>
-        </div>
-        <div id="luaConsole">
-            <div class="console-header">
-                <div class="console-title">Lua 控制台</div>
-                <<i class="fas fa-times"></</i>
-            </div>
-            <div class="console-body">
-                > 控制台已启动
-                <br>> 等待输入指令...
-            </div>
-            <div class="console-input">
-                <input type="text" placeholder="输入Lua指令...">
-            </div>
-        </div>
-    </div>
-
-    <!-- 注意：如果后续加Three.js/Cannon-ES的逻辑代码，Cannon相关API要改：Cannon.World → CANNON.World -->
-    <script>
-        // 示例：简单初始化画布（确保手机端能看到基础渲染）
-        const canvas = document.getElementById('gameCanvas');
-        const renderer = new THREE.WebGLRenderer({ canvas: canvas });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        
-        // 适配窗口 resize（手机旋转屏幕也能正常显示）
-        window.addEventListener('resize', () => {
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
-</body>
-</html>
+                <button class="action-btn" id="grabBtn"><<i class="fas fa-hand-pointer"></</i></button>
+                <button class="action-btn" id="spawnBtn"><<i class="fas fa-pl
